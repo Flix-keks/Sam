@@ -87,7 +87,7 @@
     <script>
         // Einzigartige IDs für deine globale Abstimmung (wird automatisch über die URL erstellt)
         const currentUrl = window.location.href;
-        document.getElementById('qr-image').src = `https://qrserver.com{encodeURIComponent(currentUrl)}&color=0074D9&bgcolor=ffffff`;
+        document.getElementById('qr-image').src = `https://flix-keks.github.io/Sam/index.html?poll=${encodeURIComponent(currentUrl)}`;
 
         const form = document.getElementById('poll-form');
         const voteSection = document.getElementById('vote-section');
@@ -112,7 +112,7 @@
 
             try {
                 // Sendet die Stimme live an das Internet-Archiv (CountAPI)
-                await fetch(`https://countapi.xyz{namespace}/${key}`);
+                await fetch(`https://countapi.xyz/${namespace}/${key}`);
                 
                 // Merkt sich auf diesem Gerät, dass es schon gewählt hat
                 localStorage.setItem('hat_abgestimmt', 'true');
