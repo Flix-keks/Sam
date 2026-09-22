@@ -99,14 +99,12 @@
         const resultSection = document.getElementById('result-section');
         const submitBtn = document.getElementById('submit-btn');
 
-        // 🟢 DER SLUG WIRD HIER AUTOMATISCH ERSTELLT:
-        // Er nutzt deinen GitHub-Namen (flix-keks) aus der Webadresse als eindeutigen Schlüssel!
-        let baseSlug = window.location.hostname.replace(/\./g, '_') || "flix_keks_standard";
-        if(baseSlug === "localhost" || baseSlug === "127_0_0_1") {
-            baseSlug = "flix_keks_lokaler_test"; // Falls du es am PC offline testest
-        }
+        // 🟢 HIER DEIN EIGENER SLUG:
+        // Ändere nur diesen Wert auf deinen eigenen Namen oder Projekt-Namen.
+        // Beispiel: "mein_vote_project" oder "flix_keks"
+        let baseSlug = "flix_keks";
 
-        // Falls dieses eine Gerät schon abgestimmt hat, direkt Live-Daten holen
+        // Falls dieses Gerät schon abgestimmt hat, direkt Live-Daten holen
         if (localStorage.getItem('hat_abgestimmt')) {
             zeigeErgebnisse(false);
         }
@@ -127,8 +125,10 @@
             const key = selected === 'Comic' ? 'comic' : 'normal';
 
             try {
-                // Erhöht den Zähler auf dem Internet-Server im automatischen Namespace
-                await fetch(`https://counterapi.dev{baseSlug}/${key}/up`);
+                // Erhöht den Zähler auf dem Internet-Server im eigenen Namespace
+                await fetch(`https://api.counterapi.dev/v2/flixs-team-5633/flixkeks_standard/${key}`, {
+                    method: 'POST'
+                });
                 
                 // Lokal merken, um Mehrfachklicks zu sperren
                 localStorage.setItem('hat_abgestimmt', 'true');
@@ -149,12 +149,12 @@
 
             try {
                 // Comic-Stimmen holen
-                const resComic = await fetch(`https://counterapi.dev{baseSlug}/comic`);
+                const resComic = await fetch(`https://api.counterapi.dev/v2/flixs-team-5633/flixkeks_standard/comic`);
                 const dataComic = await resComic.json();
                 comicVotes = dataComic.count || 0;
 
                 // Normal-Stimmen holen
-                const resNormal = await fetch(`https://counterapi.dev{baseSlug}/normal`);
+                const resNormal = await fetch(`https://api.counterapi.dev/v2/flixs-team-5633/flixkeks_standard/normal`);
                 const dataNormal = await resNormal.json();
                 normalVotes = dataNormal.count || 0;
             } catch(e) {
