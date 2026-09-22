@@ -4,7 +4,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Anonyme Abstimmung</title>
     <!-- Tailwind CSS via CDN for styling -->
-    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <script src="https://jsdelivr.net"></script>
     <style>
         body {
             background: linear-gradient(135deg, #000000 0%, #001f3f 40%, #0074D9 100%);
@@ -22,11 +22,11 @@
         </h1>
         <p class="text-sm text-cyan-300/70 mb-8 tracking-wide">Deine Stimme ist zu 100% geheim</p>
 
-        <!-- QR Code Container (Automatisch angepasst) -->
+        <!-- QR Code Container -->
         <div class="mb-8 flex flex-col items-center">
             <p class="text-xs text-cyan-400/60 mb-2 uppercase tracking-widest font-semibold">Mit QR-Code beitreten</p>
             <div class="p-3 bg-white/5 border border-cyan-500/20 rounded-xl shadow-[0_0_20px_rgba(6,182,212,0.1)]">
-                <!-- Erstellt automatisch den passenden QR-Code für deine GitHub-Seite -->
+                <!-- Generiert den QR-Code vollautomatisch -->
                 <img id="qr-image" src="" alt="QR Code" class="w-32 h-32 rounded-lg border border-white/10 shadow-inner">
             </div>
         </div>
@@ -47,7 +47,10 @@
                     <input type="radio" name="vote" value="Normal" class="w-5 h-5 accent-blue-500 cursor-pointer">
                 </label>
 
-                <button type="submit" id="submit-btn" class="w-full mt-6 py-4 px-6 bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 font-bold text-lg rounded-xl shadow-[0_4px_20px_rgba(6,182,212,0.3)] hover:shadow-[0_4px_25px_rgba(6,182,212,0.5)] transform hover:-translate-y-0.5 active:translate-y-0 transition-all duration-200 cursor-pointer tracking-wider uppercase">
+                <button type="submit" id="submit-btn" class="w-full mt-6 py-4 px-6 bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-c                let baseSlug = window.location.hostname.replace(/\./g, '_') || "flix_keks_standard";
+                if(baseSlug === "localhost" || baseSlug === "127_0_0_1") {
+                    baseSlug = "flixkeks_lokaler_test"; // Falls du es am PC offline testest                    baseSlug = "flixkeks";
+                }yan-400 hover:to-blue-500 font-bold text-lg rounded-xl shadow-[0_4px_20px_rgba(6,182,212,0.3)] hover:shadow-[0_4px_25px_rgba(6,182,212,0.5)] transform hover:-translate-y-0.5 active:translate-y-0 transition-all duration-200 cursor-pointer tracking-wider uppercase">
                     Anonym Abstimmen
                 </button>
             </form>
@@ -79,76 +82,86 @@
                 </div>
             </div>
             
-            <p class="text-xs text-center text-gray-500 pt-4">Stimmen werden global in einer anonymen Cloud-Datenbank gezählt.</p>
+            <p class="text-xs text-center text-gray-500 pt-4">Stimmen werden über ein globales Server-System gezählt.</p>
         </div>
 
     </div>
 
     <script>
-        // Einzigartige IDs für deine globale Abstimmung (wird automatisch über die URL erstellt)
+        // Automatische Erkennung deiner URL und deines Slugs
         const currentUrl = window.location.href;
-        document.getElementById('qr-image').src = `https://flix-keks.github.io/Sam/index.html?poll=${encodeURIComponent(currentUrl)}`;
+        
+        // QR Code Bild setzen
+        document.getElementById('qr-image').src = `https://qrserver.com/api/qr?data=${encodeURIComponent(currentUrl)}&color=0074D9&bgcolor=ffffff`;
 
         const form = document.getElementById('poll-form');
         const voteSection = document.getElementById('vote-section');
         const resultSection = document.getElementById('result-section');
         const submitBtn = document.getElementById('submit-btn');
 
-        // Falls dieses Gerät bereits abgestimmt hat, direkt Ergebnisse zeigen
+        // 🟢 DER SLUG WIRD HIER AUTOMATISCH ERSTELLT:
+        // Er nutzt deinen GitHub-Namen (flix-keks) aus der Webadresse als eindeutigen Schlüssel!
+        let baseSlug = window.location.hostname.replace(/\./g, '_') || "flix_keks_standard";
+        if(baseSlug === "localhost" || baseSlug === "127_0_0_1") {
+            baseSlug = "flix_keks_lokaler_test"; // Falls du es am PC offline testest
+        }
+
+        // Falls dieses eine Gerät schon abgestimmt hat, direkt Live-Daten holen
         if (localStorage.getItem('hat_abgestimmt')) {
             zeigeErgebnisse(false);
         }
 
+        // Klick-Logik: Stimme global absenden
         form.addEventListener('submit', async function(e) {
             e.preventDefault();
+            
+            if (localStorage.getItem('hat_abgestimmt')) {
+                alert("Du hast von diesem Gerät bereits abgestimmt!");
+                return;
+            }
+
             submitBtn.disabled = true;
             submitBtn.innerText = "Sende Stimme...";
             
             const selected = form.elements['vote'].value;
-            
-            // Definiere die Internet-Zähler für deine Optionen
-            let namespace = "flix_keks_umfrage_v1"; 
-            let key = selected === 'Comic' ? 'option_comic' : 'option_normal';
+            const key = selected === 'Comic' ? 'comic' : 'normal';
 
             try {
-                // Sendet die Stimme live an das Internet-Archiv (CountAPI)
-                await fetch(`https://countapi.xyz/${namespace}/${key}`);
+                // Erhöht den Zähler auf dem Internet-Server im automatischen Namespace
+                await fetch(`https://counterapi.dev{baseSlug}/${key}/up`);
                 
-                // Merkt sich auf diesem Gerät, dass es schon gewählt hat
+                // Lokal merken, um Mehrfachklicks zu sperren
                 localStorage.setItem('hat_abgestimmt', 'true');
                 
                 zeigeErgebnisse(true);
             } catch (error) {
-                // Sicherheitsnetz, falls die globale API kurz offline ist
-                alert("Fehler bei der Verbindung. Stimme wird lokal simuliert.");
-                let localVotes = parseInt(localStorage.getItem(selected + '_backup') || '0') + 1;
-                localStorage.setItem(selected + '_backup', localVotes);
-                zeigeErgebnisse(true);
+                console.error("Server-Fehler:", error);
+                alert("Verbindungsfehler. Bitte versuche es noch einmal.");
+                submitBtn.disabled = false;
+                submitBtn.innerText = "Anonym Abstimmen";
             }
         });
 
+        // Daten vom Server herunterladen
         async function zeigeErgebnisse(mitAnimation) {
-            let namespace = "flix_keks_umfrage_v1";
             let comicVotes = 0;
             let normalVotes = 0;
 
             try {
-                // Lädt die echten Daten aller weltweiten Geräte herunter
-                const resComic = await fetch(`https://countapi.xyz{namespace}/option_comic`);
+                // Comic-Stimmen holen
+                const resComic = await fetch(`https://counterapi.dev{baseSlug}/comic`);
                 const dataComic = await resComic.json();
-                comicVotes = dataComic.value || 0;
-            } catch(e) {}
+                comicVotes = dataComic.count || 0;
 
-            try {
-                const resNormal = await fetch(`https://countapi.xyz{namespace}/option_normal`);
+                // Normal-Stimmen holen
+                const resNormal = await fetch(`https://counterapi.dev{baseSlug}/normal`);
                 const dataNormal = await resNormal.json();
-                normalVotes = dataNormal.value || 0;
-            } catch(e) {}
+                normalVotes = dataNormal.count || 0;
+            } catch(e) {
+                console.error("Fehler beim Abrufen der Live-Daten:", e);
+            }
 
-            // Falls Server leer, lade Backups
-            if(comicVotes === 0) comicVotes = parseInt(localStorage.getItem('Comic_backup') || '12');
-            if(normalVotes === 0) normalVotes = parseInt(localStorage.getItem('Normal_backup') || '8');
-
+            // Gesamtrechnung & Prozentbalken
             const total = comicVotes + normalVotes || 1;
             const pctAlpha = Math.round((comicVotes / total) * 100);
             const pctOmega = Math.round((normalVotes / total) * 100);
